@@ -1,0 +1,23 @@
+{
+  "name": "briz_os",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "cargo run",
+    "format": "cargo +nightly fmt",
+    "build:dev": "cargo build",
+    "build:prod": "cargo build --release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JayBrizle/rusty_operating_system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JayBrizle/rusty_operating_system/issues"
+  },
+  "homepage": "https://github.com/JayBrizle/rusty_operating_system#readme"
+}

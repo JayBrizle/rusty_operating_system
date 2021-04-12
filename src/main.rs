@@ -2,12 +2,13 @@
 #![no_main]
 
 use core::panic::PanicInfo;
+mod vga_buffer;
 
 static HELLO: &[u8] = b"Hello Briz OS!";
 
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
-    let vga_buffer = 0xb8000 as *mut u8;
+    let vga_buffer = 0xb8000 as *mut u8; // memory mapped I/0 address for the VGA text buffer.
     let color = 0xb;
     for (i, &byte) in HELLO.iter().enumerate() {
         unsafe {
@@ -16,10 +17,13 @@ pub extern "C" fn _start() -> ! {
         }
     }
 
+    vga_buffer::print_something();
+
     loop {}
 }
 
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
+    
     loop {}
 }

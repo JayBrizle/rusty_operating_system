@@ -1,1 +1,5 @@
 # Base Operating System written in Rust. Follow along of https://github.com/phil-opp/blog_os
+
+# Notes to self for working on a different system.
+1. Install nightly build of toolchain.
+2. Add config.txt items as noted in that file.
