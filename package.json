@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "cargo run",
+    "test": "cargo test",
     "format": "cargo +nightly fmt",
     "build:dev": "cargo build",
     "build:prod": "cargo build --release"
