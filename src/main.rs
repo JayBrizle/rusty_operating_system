@@ -6,6 +6,7 @@ mod vga_buffer;
 
 static HELLO: &[u8] = b"Hello Briz OS!";
 
+// _start is the function that is looked for an ran after boot
 #[no_mangle]
 pub extern "C" fn _start() -> ! {
     let vga_buffer = 0xb8000 as *mut u8; // memory mapped I/0 address for the VGA text buffer.
@@ -22,8 +23,9 @@ pub extern "C" fn _start() -> ! {
     loop {}
 }
 
+// A handler is required when the system emits a panic. 
+// The panic-strategy is set to "abort" in the target x86_64-briz_os.json
 #[panic_handler]
 fn panic(_info: &PanicInfo) -> ! {
-    
     loop {}
 }
