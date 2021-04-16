@@ -1,5 +1,5 @@
-use volatile::Volatile; // prevents compiler optimizations as needed
 use core::fmt;
+use volatile::Volatile; // prevents compiler optimizations as needed
 
 #[allow(dead_code)] // Suppress compiler warning for unused variants
 #[derive(Debug, Clone, Copy, PartialEq, Eq)] // Enable "copy semantics" and make printable and comparable
@@ -88,7 +88,24 @@ impl Writer {
     }
 
     fn new_line(&mut self) {
-        // TODO
+        for row in 1..BUFFER_HEIGHT {
+            for col in 0..BUFFER_WIDTH {
+                let character = self.buffer.chars[row][col].read();
+                self.buffer.chars[row - 1][col].write(character);
+            }
+        }
+        self.clear_row(BUFFER_HEIGHT - 1);
+        self.column_position = 0;
+    }
+
+    fn clear_row(&mut self, row: usize) {
+        let blank = ScreenChar {
+            ascii_character: b' ',
+            color_code: self.color_code
+        };
+        for col in 0..BUFFER_WIDTH {
+            self.buffer.chars[row][col].write(blank);
+        }
     }
 }
 
@@ -99,15 +116,38 @@ impl fmt::Write for Writer {
     }
 }
 
-pub fn print_something() {
-    use core::fmt::Write;
-    let mut writer = Writer {
-        column_position: 0,
-        color_code: ColorCode::new(Color::Yellow, Color::Black),
-        buffer: unsafe { &mut *(0xb8000 as *mut Buffer) },
-    };
 
-    writer.write_byte(b'H');
-    writer.write_string("ello ");
-    write!(writer, "The numbers are {} and {}", 42, 1.0/3.0).unwrap();
+use lazy_static::lazy_static;
+use spin::Mutex;
+// Raw pointer items and non const calls like the ColorCode::new can't happen in statics
+// Compiler can't resolve them because they are runtime dependent. 
+// lazy_static wraps and initializes static after first access at runtime.
+lazy_static! {
+    // Mutex to provide interior mutability 
+    // Hacky work around due to language features and the nature of what is being built here with a kernel (No Rust std, threads, etc., available)
+    pub static ref WRITER: Mutex<Writer> = Mutex::new(
+        Writer {
+            column_position: 0,
+            color_code: ColorCode::new(Color::Yellow, Color::Black),
+            buffer: unsafe { &mut *(0xb8000 as *mut Buffer)}, // need unsafe to allow the reference to the memory mapped VGA buffer address on the hardware
+        }
+    );
+}
+
+
+#[macro_export] // Places in root namespace of current crate and is then available everywhere
+macro_rules! print {
+    ($($args:tt)*) => ($crate::vga_buffer::_print(format_args!($($args)*)));
+}
+
+#[macro_export]
+macro_rules! println {
+    () => ($crate::print!("\n"));
+    ($($args:tt)*) => ($crate::print!("{}\n", format_args!($($args)*)))
+}
+
+#[doc(hidden)] // Hide from generated documentation
+pub fn _print(args: fmt::Arguments) {
+    use core::fmt::Write;
+    WRITER.lock().write_fmt(args).unwrap();
 }
